@@ -99,6 +99,17 @@
             font-size: 65px;
             font-weight: 900;
         }
+
+        .team button {
+            font-size: 28px;
+            padding: 14px 30px;
+            margin: 10px;
+            border-radius: 10px;
+            border: none;
+            background: #1a73e8;
+            color: #fff;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -125,6 +136,7 @@
 
             <div class="fouls">Фолы: <span id="fouls1">0</span></div>
             <button onclick="addFoul(1)" style="font-size:32px; padding:15px 35px; margin-top:10px;">+ Фол</button>
+            <button onclick="removeFoul(1)" style="font-size:32px; padding:15px 35px; margin-top:10px;">- Фол</button>
         </div>
 
         <div class="team">
@@ -137,7 +149,8 @@
             </div>
 
             <div class="fouls">Фолы: <span id="fouls2">0</span></div>
-            <button onclick="addFoul(2)" style="font-size:32px; padding:15px 35px; margin-top:10px;">+ Фол</button>
+            <button onclick="addFoul(2)">+ Фол</button>
+            <button onclick="removeFoul(2)">- Фол</button>
         </div>
     </div>
 
@@ -196,6 +209,10 @@
         function addFoul(team) {
             const el = document.getElementById("fouls" + team);
             el.textContent = parseInt(el.textContent) + 1;
+        }
+        function removeFoul(team) {
+            const el = document.getElementById("fouls" + team);
+            el.textContent = parseInt(el.textContent) - 1;
         }
     </script>
 
