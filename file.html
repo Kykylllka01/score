@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Табло счета</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            padding: 20px;
+            gap: 20px;
+            position: relative;
+            z-index: 1;
+            max-width: 1800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Левая панель */
+        .left-sidebar {
+            background: linear-gradient(145deg, #ff6b6b, #ee5a24);
+            padding: 20px;
+            border-radius: 20px;
+            width: 400px;
+            color: white;
+            box-shadow:
+                0 20px 40px rgba(238, 90, 36, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 40px);
+        }
+
+        .left-sidebar::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            33% {
+                transform: translate(30px, -30px) rotate(120deg);
+            }
+
+            66% {
+                transform: translate(-20px, 20px) rotate(240deg);
+            }
+        }
+
+        .team-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .add-player-section {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+
+        .add-player-form {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .add-player-input {
+            padding: 8px 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .add-player-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .add-player-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .add-player-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .add-player-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .add-player-btn:hover::before {
+            left: 100%;
+        }
+
+        .add-player-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.6);
+        }
+
+        .player-list {
+            list-style: none;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .player-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .player-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .player-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .player-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            padding-left: 8px;
+            border-radius: 6px;
+        }
+
+        .player-number {
+            font-weight: 700;
+            margin-right: 8px;
+            font-size: 14px;
+            min-width: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .player-name {
+            flex: 1;
+            font-size: 12px;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .player-fouls {
+            display: flex;
+            gap: 3px;
+            margin: 0 8px;
+        }
+
+        .foul-dot {
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(135deg, #fff, #f0f0f0);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .foul-dot:hover {
+            transform: scale(1.3);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+        }
+
+        .foul-dot.inactive {
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .player-foul-count {
+            font-weight: 700;
+            min-width: 16px;
+            text-align: right;
+            font-size: 12px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+
+        .remove-player-btn {
+            background: linear-gradient(135deg, #ff4757, #ff3838);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 6px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(255, 71, 87, 0.4);
+            flex-shrink: 0;
+        }
+
+        .remove-player-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 3px 8px rgba(255, 71, 87, 0.6);
+        }
+
+        /* Центральная секция */
+        .center-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            position: relative;
+            z-index: 1;
+            min-width: 0;
+        }
+
+        .timer-display {
+            background: linear-gradient(145deg, #2d3436, #000000);
+            color: #00ff00;
+            font-size: 48px;
+            font-weight: 900;
+            padding: 20px 40px;
+            border-radius: 20px;
+            font-family: 'Courier New', monospace;
+            min-width: 220px;
+            text-align: center;
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                inset 0 2px 4px rgba(255, 255, 255, 0.1),
+                0 0 0 2px rgba(0, 255, 0, 0.3);
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timer-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.1), transparent);
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes scan {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .timer-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(76, 175, 80, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timer-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .timer-btn:active::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        .timer-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.6);
+        }
+
+        .timer-btn.stop {
+            background: linear-gradient(135deg, #ff4757, #ff3838);
+            box-shadow: 0 3px 10px rgba(255, 71, 87, 0.4);
+        }
+
+        .timer-btn.stop:hover {
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.6);
+        }
+
+        .timer-btn.reset {
+            background: linear-gradient(135deg, #ffa502, #ff6348);
+            box-shadow: 0 3px 10px rgba(255, 165, 2, 0.4);
+        }
+
+        .timer-btn.reset:hover {
+            box-shadow: 0 4px 15px rgba(255, 165, 2, 0.6);
+        }
+
+        .teams-section {
+            display: flex;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .team-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo-container {
+            width: 360px;
+            height: 360px;
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 15px 30px rgba(0, 0, 0, 0.2),
+                inset 0 2px 4px rgba(255, 255, 255, 0.5);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .logo-container:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+            transition: all 0.3s ease;
+            transform: scale(1.3);
+        }
+
+        .logo-container:hover img {
+            transform: scale(1.3);
+        }
+
+        .score-display {
+            background: linear-gradient(145deg, #ff6b6b, #ee5a24);
+            color: white;
+            font-size: 48px;
+            font-weight: 900;
+            padding: 18px 35px;
+            border-radius: 20px;
+            font-family: 'Arial Black', sans-serif;
+            min-width: 100px;
+            text-align: center;
+            box-shadow:
+                0 15px 30px rgba(238, 90, 36, 0.4),
+                inset 0 2px 4px rgba(255, 255, 255, 0.2);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .right-team .score-display {
+            background: linear-gradient(145deg, #8B4513, #654321);
+            box-shadow:
+                0 15px 30px rgba(139, 69, 19, 0.4),
+                inset 0 2px 4px rgba(255, 255, 255, 0.2);
+        }
+
+        .score-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .score-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 22px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(52, 152, 219, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.6);
+        }
+
+        .score-btn:active {
+            transform: scale(0.95);
+        }
+
+        .periods-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .period-btn {
+            background: linear-gradient(145deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(238, 90, 36, 0.4);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .period-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(238, 90, 36, 0.6);
+        }
+
+        .period-btn.active {
+            background: linear-gradient(145deg, #FFD700, #FFA500);
+            color: #333;
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+            transform: scale(1.1);
+        }
+
+        .arrow {
+            font-size: 28px;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.8;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+        }
+
+        /* Правая панель */
+        .right-sidebar {
+            background: linear-gradient(145deg, #8B4513, #654321);
+            padding: 20px;
+            border-radius: 20px;
+            width: 400px;
+            color: white;
+            box-shadow:
+                0 20px 40px rgba(139, 69, 19, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 40px);
+        }
+
+        .right-sidebar::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: float 20s ease-in-out infinite reverse;
+        }
+
+        .team-fouls-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+
+        .team-fouls-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .team-fouls-display {
+            font-size: 36px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .team-fouls-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .foul-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(76, 175, 80, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .foul-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.6);
+        }
+
+        .foul-btn.subtract {
+            background: linear-gradient(135deg, #ff4757, #ff3838);
+            box-shadow: 0 3px 10px rgba(255, 71, 87, 0.4);
+        }
+
+        .foul-btn.subtract:hover {
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.6);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+            font-size: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .player-name {
+            font-size: 20px;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 1200px) {
+            .main-container {
+                flex-direction: column;
+                align-items: center;
+                padding: 15px;
+                gap: 15px;
+            }
+
+            .left-sidebar,
+            .right-sidebar {
+                width: 100%;
+                max-width: 500px;
+                max-height: none;
+            }
+
+            .teams-section {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .timer-display {
+                font-size: 36px;
+                padding: 15px 30px;
+            }
+
+            .score-display {
+                font-size: 36px;
+                padding: 12px 25px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .timer-display {
+                font-size: 32px;
+                padding: 12px 20px;
+            }
+
+            .score-display {
+                font-size: 32px;
+                padding: 10px 20px;
+            }
+
+            .period-btn {
+                font-size: 18px;
+                padding: 10px 15px;
+            }
+
+            .teams-section {
+                gap: 20px;
+            }
+
+            .left-sidebar,
+            .right-sidebar {
+                width: 100%;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <!-- Левая панель -->
+        <div class="left-sidebar">
+            <div class="team-title">КОМАНДА 1</div>
+            <div class="add-player-section">
+                <div class="add-player-form">
+                    <input type="number" class="add-player-input" id="leftPlayerNumber" placeholder="Номер" min="0"
+                        max="99">
+                    <input type="text" class="add-player-input" id="leftPlayerName" placeholder="Имя игрока">
+                    <button class="add-player-btn" onclick="addPlayer('left')">Добавить игрока</button>
+                </div>
+            </div>
+            <ul class="player-list" id="leftPlayers"></ul>
+            <div class="team-fouls-section">
+                <div class="team-fouls-title">Командные фолы</div>
+                <div class="team-fouls-display" id="leftTeamFouls">0</div>
+                <div class="team-fouls-controls">
+                    <button class="foul-btn" onclick="addTeamFoul('left')">+</button>
+                    <button class="foul-btn subtract" onclick="subtractTeamFoul('left')">-</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Центральная секция -->
+        <div class="center-section">
+            <div class="timer-display" id="timer">10.00</div>
+            <div class="timer-controls">
+                <button class="timer-btn" id="startBtn" onclick="toggleTimer()">Старт</button>
+                <button class="timer-btn" onclick="setTimer(1)">1 мин</button>
+                <button class="timer-btn" onclick="setTimer(5)">5 мин</button>
+                <button class="timer-btn" onclick="setTimer(10)">10 мин</button>
+                <button class="timer-btn reset" onclick="resetTimer()">Сброс</button>
+            </div>
+
+            <div class="teams-section">
+                <div class="team-container">
+                    <div class="logo-container">
+                        <img src="team1-logo.jpg" alt="Команда 1"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div style="display:none; font-size: 12px; color: #666;">Команда 1</div>
+                    </div>
+                    <div class="score-display" id="leftScore">0</div>
+                    <div class="score-controls">
+                        <button class="score-btn" onclick="changeScore('left', -1)">-</button>
+                        <button class="score-btn" onclick="changeScore('left', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="team-container right-team">
+                    <div class="logo-container">
+                        <img src="team2-logo.jpg" alt="Команда 2"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div style="display:none; font-size: 12px; color: #666;">Команда 2</div>
+                    </div>
+                    <div class="score-display" id="rightScore">0</div>
+                    <div class="score-controls">
+                        <button class="score-btn" onclick="changeScore('right', -1)">-</button>
+                        <button class="score-btn" onclick="changeScore('right', 1)">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="periods-section">
+                <span class="arrow">←</span>
+                <button class="period-btn" onclick="setPeriod(1)">1</button>
+                <button class="period-btn active" onclick="setPeriod(2)">2</button>
+                <button class="period-btn" onclick="setPeriod(3)">3</button>
+                <button class="period-btn" onclick="setPeriod(4)">4</button>
+                <span class="arrow">→</span>
+            </div>
+        </div>
+
+        <!-- Правая панель -->
+        <div class="right-sidebar">
+            <div class="team-title">КОМАНДА 2</div>
+            <div class="add-player-section">
+                <div class="add-player-form">
+                    <input type="number" class="add-player-input" id="rightPlayerNumber" placeholder="Номер" min="0"
+                        max="99">
+                    <input type="text" class="add-player-input" id="rightPlayerName" placeholder="Имя игрока">
+                    <button class="add-player-btn" onclick="addPlayer('right')">Добавить игрока</button>
+                </div>
+            </div>
+            <ul class="player-list" id="rightPlayers"></ul>
+            <div class="team-fouls-section">
+                <div class="team-fouls-title">Командные фолы</div>
+                <div class="team-fouls-display" id="rightTeamFouls">0</div>
+                <div class="team-fouls-controls">
+                    <button class="foul-btn" onclick="addTeamFoul('right')">+</button>
+                    <button class="foul-btn subtract" onclick="subtractTeamFoul('right')">-</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Игроки команд (пустые массивы)
+        let leftPlayers = [];
+        let rightPlayers = [];
+
+        // Состояние игры (все значения обнулены)
+        let gameState = {
+            leftScore: 0,
+            rightScore: 0,
+            leftTeamFouls: 0,
+            rightTeamFouls: 0,
+            currentPeriod: 2,
+            timerSeconds: 600, // 10 минут по умолчанию
+            timerRunning: false,
+            timerInterval: null,
+            lastUpdateTime: Date.now()
+        };
+
+        // Инициализация
+        function init() {
+            renderPlayers();
+            updateDisplay();
+        }
+
+        // Добавление игрока
+        function addPlayer(team) {
+            const numberInput = document.getElementById(team + 'PlayerNumber');
+            const nameInput = document.getElementById(team + 'PlayerName');
+
+            const number = parseInt(numberInput.value);
+            const name = nameInput.value.trim();
+
+            if (!number || !name) {
+                alert('Введите номер и имя игрока');
+                return;
+            }
+
+            const players = team === 'left' ? leftPlayers : rightPlayers;
+
+            // Проверка на дубликат номера
+            if (players.find(p => p.number === number)) {
+                alert('Игрок с таким номером уже существует');
+                return;
+            }
+
+            players.push({
+                number: number,
+                name: name,
+                fouls: 0
+            });
+
+            // Сортировка по номеру
+            players.sort((a, b) => a.number - b.number);
+
+            // Очистка полей
+            numberInput.value = '';
+            nameInput.value = '';
+
+            renderPlayers();
+            updateTeamFouls();
+        }
+
+        // Удаление игрока
+        function removePlayer(team, index) {
+            if (confirm('Удалить игрока?')) {
+                const players = team === 'left' ? leftPlayers : rightPlayers;
+                players.splice(index, 1);
+                renderPlayers();
+                updateTeamFouls();
+            }
+        }
+
+        // Отрисовка игроков
+        function renderPlayers() {
+            const leftContainer = document.getElementById('leftPlayers');
+            const rightContainer = document.getElementById('rightPlayers');
+
+            if (leftPlayers.length === 0) {
+                leftContainer.innerHTML = '<div class="empty-state">Нет игроков</div>';
+            } else {
+                leftContainer.innerHTML = leftPlayers.map((player, index) => `
+                    <li class="player-item">
+                        <span class="player-number">${player.number}</span>
+                        <span class="player-name">${player.name}</span>
+                        <div class="player-fouls">
+                            ${[0, 1, 2, 3, 4].map(i => `<div class="foul-dot ${i < player.fouls ? '' : 'inactive'}" onclick="togglePlayerFoul('left', ${index})"></div>`).join('')}
+                        </div>
+                        <span class="player-foul-count">${player.fouls}</span>
+                        <button class="remove-player-btn" onclick="removePlayer('left', ${index})">×</button>
+                    </li>
+                `).join('');
+            }
+
+            if (rightPlayers.length === 0) {
+                rightContainer.innerHTML = '<div class="empty-state">Нет игроков</div>';
+            } else {
+                rightContainer.innerHTML = rightPlayers.map((player, index) => `
+                    <li class="player-item">
+                        <span class="player-number">${player.number}</span>
+                        <span class="player-name">${player.name}</span>
+                        <div class="player-fouls">
+                            ${[0, 1, 2, 3, 4].map(i => `<div class="foul-dot ${i < player.fouls ? '' : 'inactive'}" onclick="togglePlayerFoul('right', ${index})"></div>`).join('')}
+                        </div>
+                        <span class="player-foul-count">${player.fouls}</span>
+                        <button class="remove-player-btn" onclick="removePlayer('right', ${index})">×</button>
+                    </li>
+                `).join('');
+            }
+        }
+
+        // Изменение счета
+        function changeScore(team, delta) {
+            if (team === 'left') {
+                gameState.leftScore = Math.max(0, gameState.leftScore + delta);
+            } else {
+                gameState.rightScore = Math.max(0, gameState.rightScore + delta);
+            }
+            updateDisplay();
+        }
+
+        // Управление фолами игроков
+        function togglePlayerFoul(team, playerIndex) {
+            const players = team === 'left' ? leftPlayers : rightPlayers;
+            players[playerIndex].fouls = (players[playerIndex].fouls + 1) % 6;
+            renderPlayers();
+            updateTeamFouls();
+        }
+
+        // Автоматический подсчет командных фолов
+        function updateTeamFouls() {
+            gameState.leftTeamFouls = leftPlayers.reduce((sum, player) => sum + player.fouls, 0);
+            gameState.rightTeamFouls = rightPlayers.reduce((sum, player) => sum + player.fouls, 0);
+            updateDisplay();
+        }
+
+        // Управление командными фолами (ручное)
+        function addTeamFoul(team) {
+            if (team === 'left') {
+                gameState.leftTeamFouls++;
+            } else {
+                gameState.rightTeamFouls++;
+            }
+            updateDisplay();
+        }
+
+        function subtractTeamFoul(team) {
+            if (team === 'left') {
+                gameState.leftTeamFouls = Math.max(0, gameState.leftTeamFouls - 1);
+            } else {
+                gameState.rightTeamFouls = Math.max(0, gameState.rightTeamFouls - 1);
+            }
+            updateDisplay();
+        }
+
+        // Управление периодами
+        function setPeriod(period) {
+            gameState.currentPeriod = period;
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // Управление таймером обратного отсчета
+        function toggleTimer() {
+            const btn = document.getElementById('startBtn');
+            if (gameState.timerRunning) {
+                clearInterval(gameState.timerInterval);
+                gameState.timerRunning = false;
+                btn.textContent = 'Старт';
+                btn.classList.remove('stop');
+            } else {
+                gameState.timerRunning = true;
+                gameState.lastUpdateTime = Date.now();
+                btn.textContent = 'Пауза';
+                btn.classList.add('stop');
+
+                gameState.timerInterval = setInterval(() => {
+                    const now = Date.now();
+                    const elapsed = Math.floor((now - gameState.lastUpdateTime) / 1000);
+
+                    if (elapsed > 0) {
+                        gameState.lastUpdateTime = now;
+                        gameState.timerSeconds = Math.max(0, gameState.timerSeconds - elapsed);
+                        updateTimer();
+
+                        if (gameState.timerSeconds === 0) {
+                            clearInterval(gameState.timerInterval);
+                            gameState.timerRunning = false;
+                            btn.textContent = 'Старт';
+                            btn.classList.remove('stop');
+                            alert('Время истекло!');
+                        }
+                    }
+                }, 100);
+            }
+        }
+
+        function setTimer(minutes) {
+            clearInterval(gameState.timerInterval);
+            gameState.timerSeconds = minutes * 60;
+            gameState.timerRunning = false;
+            document.getElementById('startBtn').textContent = 'Старт';
+            document.getElementById('startBtn').classList.remove('stop');
+            updateTimer();
+        }
+
+        function resetTimer() {
+            clearInterval(gameState.timerInterval);
+            gameState.timerSeconds = 600; // Сброс на 10 минут
+            gameState.timerRunning = false;
+            document.getElementById('startBtn').textContent = 'Старт';
+            document.getElementById('startBtn').classList.remove('stop');
+            updateTimer();
+        }
+
+        function updateTimer() {
+            const minutes = Math.floor(gameState.timerSeconds / 60);
+            const seconds = gameState.timerSeconds % 60;
+            document.getElementById('timer').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            // Изменил разделитель на ":" для лучшей читаемости (MM:SS)
+        }
+
+        // Обновление отображения
+        function updateDisplay() {
+            document.getElementById('leftScore').textContent = gameState.leftScore;
+            document.getElementById('rightScore').textContent = gameState.rightScore;
+            document.getElementById('leftTeamFouls').textContent = gameState.leftTeamFouls;
+            document.getElementById('rightTeamFouls').textContent = gameState.rightTeamFouls;
+            updateTimer();
+        }
+
+        // Запуск приложения
+        init();
+    </script>
+</body>
+
+</html>
